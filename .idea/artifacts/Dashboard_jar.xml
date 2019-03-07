@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Dashboard:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Dashboard_jar</output-path>
+    <root id="archive" name="Dashboard.jar">
+      <element id="module-output" name="Dashboard_main" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/commons-codec/commons-codec/1.5/cf993e250ff71804754ec2734a16f23c0be99f70/commons-codec-1.5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/postgresql/postgresql/9.0-801.jdbc4/153f2f92a786f12fc111d0111f709012df87c808/postgresql-9.0-801.jdbc4.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

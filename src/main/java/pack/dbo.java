@@ -1,3 +1,5 @@
+package pack;
+
 import java.sql.*;
 
 public class dbo {

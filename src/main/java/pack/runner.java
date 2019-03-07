@@ -1,3 +1,5 @@
+package pack;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -21,25 +23,40 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-public class main {
-    private static DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+public class runner {
 
+    private static DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
     public static void main(String[] args) throws Exception {
         Projects p[] = Projects.values();
-        for (int i = 0; i < p.length; i++) {
-            int newBuild = getLastBuildId(p[i]);
-            int oldBuildId = getLastBuildFromDB(p[i]);
-            if (newBuild > oldBuildId) {
-                Document doc = getFailures(newBuild);
-                saveToDB(doc, p[i]);
+
+        while (true) {
+            for (int i = 0; i < p.length; i++) {
+                System.out.println("Starting project:" + p[i]);
+                try {
+                    int newBuild = getLastBuildId(p[i]);
+                    int oldBuildId = getLastBuildFromDB(p[i]);
+                    if (newBuild > oldBuildId) {
+                        Document doc = getFailures(newBuild);
+                        saveToDB(doc, p[i]);
+                    } else {
+                        System.out.println(getTime() + "Data is up to date for project: " + p[i] + "\toldBuildId: " + oldBuildId + "\tnewBuild:" + newBuild);
+                    }
+                } catch (Exception e) {
+                    System.out.println(getTime() + "Failed to execute - " + p[i]);
+                    e.printStackTrace();
+                }
+                System.out.println("--------------------------------------------------------------------------------------------------------------");
             }
+            System.out.println("Going To Sleep for 5 min");
+            System.out.println("===============================================================================================================");
+            Thread.sleep(1000 * 60 * 5);
         }
     }
 
     private static int getLastBuildId(Projects project) throws IOException, SAXException, ParserConfigurationException {
         String page = "http://192.168.1.213:8090/httpAuth/app/rest/projects/id:Automation_Ct/buildTypes/id:" + project + "/builds";
-        System.out.println(page);
+        System.out.println(getTime() + page);
         String authString = "Navot" + ":" + "good1luck";
         byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
         String authStringEnc = new String(authEncBytes);
@@ -58,14 +75,14 @@ public class main {
             }
             result = sb.toString();
             if (((HttpURLConnection) urlConnection).getResponseCode() < 300) {
-                System.out.println(result);
+                System.out.println(getTime() + result.substring(0,100)+"...");
             } else {
                 throw new RuntimeException(result);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        // System.out.println(result);
+        // System.out.println(getTime()+result);
 
         Document doc = fromStringToDoc(result);
 
@@ -88,7 +105,7 @@ public class main {
 
     private static Document getFailures(int buildId) throws IOException, SAXException, ParserConfigurationException {
         String page = "http://192.168.1.213:8090/httpAuth/app/rest/testOccurrences?locator=build:(id:" + buildId + "),status:FAILURE,count:10000";
-        System.out.println(page);
+        System.out.println(getTime() + page);
         String authString = "Navot" + ":" + "good1luck";
         byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
         String authStringEnc = new String(authEncBytes);
@@ -107,14 +124,14 @@ public class main {
             }
             result = sb.toString();
             if (((HttpURLConnection) urlConnection).getResponseCode() < 300) {
-                System.out.println(result);
+                System.out.println(getTime() + result.substring(0,100)+"...");
             } else {
                 throw new RuntimeException(result);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        //  System.out.println(result);
+        //  System.out.println(getTime()+result);
 
         return fromStringToDoc(result);
     }
@@ -122,7 +139,7 @@ public class main {
     private static int getLastBuildFromDB(Projects project) {
         String SQL = "SELECT MAX(build) FROM " + project + ";";
 
-        return  dbo.executeAndGet(SQL);
+        return dbo.executeAndGet(SQL);
     }
 
     private static void saveToDB(Document doc, Projects project) {
@@ -143,36 +160,36 @@ public class main {
                 String testId = id.substring((id.indexOf(":") + 1), id.indexOf(","));
 
                 String machineName = name.substring(0, name.indexOf(":"))
-                        .replace("SeeTestAutomation.Runners.","");
+                        .replace("SeeTestAutomation.Runners.", "");
 
                 String packageName = name.substring((name.indexOf(":") + 2), name.lastIndexOf("."))
-                        .replace("SeeTestAutomation.","")
-                        .replace("AppiumStudio.","")
-                        .replace("experiverse.tests.","")
-                        .replace("Grid.runners.","");
+                        .replace("SeeTestAutomation.", "")
+                        .replace("AppiumStudio.", "")
+                        .replace("experiverse.tests.", "")
+                        .replace("Grid.runners.", "");
 
                 String testName = name.substring(name.lastIndexOf(".") + 1);
 
 
                 String SQL = "INSERT INTO " + project + " (build,testId,machineName,packageName,testName, duration)" +
                         "VALUES (" + build + ",'" + testId + "','" + machineName + "','" + packageName + "','" + testName + "'," + duration + ");";
-                System.out.println(SQL);
+                System.out.println(getTime() + SQL);
 
                 if (dbo.execute(SQL)) {
 
                 } else {
-                    System.out.println("Failed To Insert - " + SQL);
+                    System.out.println(getTime() + "Failed To Insert - " + SQL);
 
                 }
 
-//                System.out.println("build: " + build+"    test id: " + testId+"    machine name: " + machineName+"    package: " + packageName+"    test name: " + testName+"    duration: " + duration);
+//                System.out.println(getTime()+"build: " + build+"    test id: " + testId+"    machine name: " + machineName+"    package: " + packageName+"    test name: " + testName+"    duration: " + duration);
             } catch (Exception e) {
-                System.out.println("Failed To Parse - " + id + " - " + name + " - " + duration);
+                System.out.println(getTime() + "Failed To Parse - " + id + " - " + name + " - " + duration);
                 fail++;
             }
 
         }
-        System.out.println("fail: " + fail);
+        System.out.println(getTime() + "fail: " + fail);
     }
 
     static Document fromStringToDoc(String result) throws ParserConfigurationException, SAXException, IOException {
@@ -185,7 +202,7 @@ public class main {
     }
 
     static String getTime() {
-        return df.format(new Date(System.currentTimeMillis()));
+        return df.format(new Date(System.currentTimeMillis())) + "\t";
     }
 }
 
